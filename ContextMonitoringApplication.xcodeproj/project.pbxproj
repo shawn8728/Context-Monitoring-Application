@@ -15,7 +15,6 @@
 		29142CEE2AAC6D03006083D0 /* SymptomsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29142CED2AAC6D03006083D0 /* SymptomsView.swift */; };
 		29142CF02AAC6D0D006083D0 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29142CEF2AAC6D0D006083D0 /* HistoryView.swift */; };
 		29142CF22AAC6D14006083D0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29142CF12AAC6D14006083D0 /* HomeView.swift */; };
-		29142CF42AAC6D33006083D0 /* VideoPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29142CF32AAC6D33006083D0 /* VideoPicker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,7 +27,6 @@
 		29142CED2AAC6D03006083D0 /* SymptomsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomsView.swift; sourceTree = "<group>"; };
 		29142CEF2AAC6D0D006083D0 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		29142CF12AAC6D14006083D0 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		29142CF32AAC6D33006083D0 /* VideoPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPicker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +59,7 @@
 		29142CD02AAC6BBA006083D0 /* ContextMonitoringApplication */ = {
 			isa = PBXGroup;
 			children = (
+				29D7C49A2AAC98CB003B0584 /* Data */,
 				29142CE62AAC6CA1006083D0 /* Resources */,
 				29142CE52AAC6C81006083D0 /* Core */,
 				29142CE42AAC6C75006083D0 /* App */,
@@ -133,7 +132,6 @@
 			isa = PBXGroup;
 			children = (
 				29142CF12AAC6D14006083D0 /* HomeView.swift */,
-				29142CF32AAC6D33006083D0 /* VideoPicker.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -152,6 +150,13 @@
 				29142CED2AAC6D03006083D0 /* SymptomsView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		29D7C49A2AAC98CB003B0584 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Data;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -225,7 +230,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				29142CDE2AAC6BBB006083D0 /* ContextMonitoringApplication.xcdatamodeld in Sources */,
-				29142CF42AAC6D33006083D0 /* VideoPicker.swift in Sources */,
 				29142CF22AAC6D14006083D0 /* HomeView.swift in Sources */,
 				29142CF02AAC6D0D006083D0 /* HistoryView.swift in Sources */,
 				29142CEE2AAC6D03006083D0 /* SymptomsView.swift in Sources */,
@@ -359,6 +363,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"ContextMonitoringApplication/Preview Content\"";
+				DEVELOPMENT_TEAM = TNY374X8YA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -387,6 +392,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"ContextMonitoringApplication/Preview Content\"";
+				DEVELOPMENT_TEAM = TNY374X8YA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

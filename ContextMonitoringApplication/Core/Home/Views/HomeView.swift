@@ -11,6 +11,195 @@ import UniformTypeIdentifiers
 import AVFoundation
 import UIKit
 
+struct HomeView: View {
+    @State private var showFileImporter: Bool = false
+    @State private var isPickerPresented: Bool = false
+    
+    @State private var videoURL: URL?
+    @State private var csvURL: URL?
+    
+    @State public var respiratoryRate: Int64 = 0
+    @State public var heartRate: Int64 = 0
+    
+    @State private var x: [Float] = []
+    @State private var y: [Float] = []
+    @State private var z: [Float] = []
+    
+    @State private var isRespiratoryRateButtonDisabled = true
+    @State private var isHeartRateButtonDisabled = true
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                // symptoms rating
+                NavigationLink(destination: SymptomsView(heartRate: $heartRate, respiratoryRate: $respiratoryRate)) {
+                    Text("Symptoms")
+                        .padding(8)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding(.bottom, 50)
+                
+                Text("Selected CSV file: \(csvURL?.lastPathComponent ?? "None")")
+                Text("Selected Video: \(videoURL?.lastPathComponent ?? "None")")
+                Button(action:{
+                    x.removeAll()
+                    y.removeAll()
+                    z.removeAll()
+                    csvURL = readFirstCSVFromMainBundle()
+                    videoURL = readFirstVideoFromMainBundle()
+                    handleCSV(url: csvURL ?? URL(fileURLWithPath: ""))
+                    
+                    if csvURL != nil {
+                        isRespiratoryRateButtonDisabled = false
+                    }
+                    if videoURL != nil {
+                        isHeartRateButtonDisabled = false
+                    }
+                }, label: {
+                    Text("Upload Signs")
+                })
+                .padding(.bottom, 50)
+                .buttonStyle(.borderedProminent)
+                
+                // measure heart rate
+                Text("Heart Rate: \(heartRate)")
+                Button(action:{
+                    if let unwrappedURL = videoURL {
+                        handleVideo(url: unwrappedURL)
+                        print("Computed heart rate: \(heartRate)")
+                    } else {
+                        print("videoURL is nil")
+                    }
+                }, label: {
+                    Text("Measure Heart Rate")
+                })
+                .padding(.bottom, 50)
+                .buttonStyle(.borderedProminent)
+                .disabled(isHeartRateButtonDisabled)
+                
+                // measure respiratory rate
+                Text("Respiratory Rate: \(respiratoryRate)")
+                Button(action:{
+                    respiratoryRate = callRespiratoryCalculator(threshold: 0.0589)
+                    print("Computed respiratory rate: \(respiratoryRate)")
+                }, label: {
+                    Text("Measure Respiratory Rate")
+                })
+                .buttonStyle(.borderedProminent)
+                .disabled(isRespiratoryRateButtonDisabled)
+            }
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    NavigationLink(destination: HistoryView()) {
+                        Text("History")
+                    }
+                }
+            }
+        }
+    }
+    
+    func readFirstCSVFromMainBundle() -> URL? {
+        guard let resourcePath = Bundle.main.resourcePath else { return nil }
+        let fileManager = FileManager.default
+        
+        do {
+            let contents = try fileManager.contentsOfDirectory(atPath: resourcePath)
+            if let csvFileName = contents.first(where: { $0.hasSuffix(".csv") }) {
+                let csvFilePath = resourcePath + "/" + csvFileName
+                return URL(fileURLWithPath: csvFilePath)
+            } else {
+                print("No CSV file found in the main bundle.")
+                return nil
+            }
+        } catch {
+            print("Error: \(error)")
+            return nil
+        }
+    }
+    
+    func readFirstVideoFromMainBundle() -> URL? {
+        guard let resourcePath = Bundle.main.resourcePath else { return nil }
+        let fileManager = FileManager.default
+        
+        do {
+            let contents = try fileManager.contentsOfDirectory(atPath: resourcePath)
+            if let videoFileName = contents.first(where: { $0.hasSuffix(".mp4")  }) {
+                let videoFilePath = resourcePath + "/" + videoFileName
+                return URL(fileURLWithPath: videoFilePath)
+            } else {
+                print("No Video file found in the main bundle.")
+                return nil
+            }
+        } catch {
+            print("Error: \(error)")
+            return nil
+        }
+    }
+    
+    func handleVideo(url: URL) {
+        let slowTask = SlowTask()
+        
+        slowTask.processMedia(atPath: url) { rate in
+            heartRate = rate ?? 0
+        }
+    }
+    
+    func handleCSV(url: URL) {
+        // Handle the CSV content
+        do {
+            let dataContents = try String(contentsOf: url, encoding: .utf8)
+            let lines = dataContents.split(separator: "\n").map { String($0) }
+            
+            var currentAxis = -1
+            
+            for line in lines {
+                if let value = Float(line) {
+                    if value == 0.0 {
+                        currentAxis += 1
+                    }
+                    
+                    switch currentAxis {
+                    case 0:
+                        x.append(value)
+                    case 1:
+                        y.append(value)
+                    case 2:
+                        z.append(value)
+                    default:
+                        break
+                    }
+                }
+            }
+        } catch {
+            print("Error reading CSV: \(error)")
+        }
+    }
+    
+    func callRespiratoryCalculator(threshold: Float) -> Int64 {
+        var previousValue: Float = 10.0
+        var currentValue: Float = 0.0
+        var k: Int = 0
+        
+        for i in 11...450 {
+            currentValue = sqrtf(
+                powf(z[i], 2) +
+                powf(x[i], 2) +
+                powf(y[i], 2)
+            )
+            
+            if abs(previousValue - currentValue) > threshold {
+                k += 1
+            }
+            previousValue = currentValue
+        }
+        
+        let ret = Float(k) / 45.0
+        return Int64(ret * 30)
+    }
+}
+
 class SlowTask {
     func processMedia(atPath path: URL, completion: @escaping (Int64?) -> Void) {
         let asset = AVAsset(url: path)
@@ -94,176 +283,6 @@ class SlowTask {
         
         let rate = ((CGFloat(count) / 45.0) * 60.0).rounded(.down)
         completion(Int64(rate / 2))
-    }
-}
-
-struct HomeView: View {
-    @State private var showFileImporter: Bool = false
-    @State private var isPickerPresented: Bool = false
-    
-    @State private var videoURL: URL?
-    @State private var csvURL: URL?
-    
-    @State public var respiratoryRate: Int64 = 0
-    @State public var heartRate: Int64 = 0
-    
-    @State private var x: [Float] = []
-    @State private var y: [Float] = []
-    @State private var z: [Float] = []
-    
-    @State private var isRespiratoryRateButtonDisabled = true
-    @State private var isHeartRateButtonDisabled = false
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                // symptoms rating
-                NavigationLink(destination: SymptomsView(heartRate: $heartRate, respiratoryRate: $respiratoryRate)) {
-                    Text("Symptoms")
-                        .padding(8)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .padding(.bottom, 50)
-                
-                // upload signs
-                Text("Selected file: \(csvURL?.lastPathComponent ?? "None")")
-                
-                Button(action:{
-                    showFileImporter = true
-                }, label: {
-                    Text("Upload Signs")
-                })
-                .padding(.bottom, 50)
-                .buttonStyle(.borderedProminent)
-                .fileImporter(
-                    isPresented: $showFileImporter,
-                    allowedContentTypes: [UTType.commaSeparatedText]
-                ) { result in
-                    switch result {
-                    case .success(let url):
-                        x.removeAll()
-                        y.removeAll()
-                        z.removeAll()
-                        csvURL = url
-                        handleCSV(url: url)
-                        isRespiratoryRateButtonDisabled = false
-                    case .failure(let error):
-                        print(error.localizedDescription)
-                    }
-                }
-                
-                // upload heart rate
-                Text("Selected Video: \(videoURL?.lastPathComponent ?? "None")")
-                
-                Button(action:{
-                    isPickerPresented = true
-                }, label: {
-                    Text("Upload Heart Rate")
-                })
-                .padding(.bottom, 50)
-                .buttonStyle(.borderedProminent)
-                .sheet(isPresented: $isPickerPresented, content: {
-                    VideoPicker(videoURL: $videoURL)
-                })
-                
-                // measure heart rate
-                Text("Heart Rate: \(heartRate)")
-                Button(action:{
-                    if let unwrappedURL = videoURL {
-                        handleVideo(url: unwrappedURL)
-                        print("Computed heart rate: \(heartRate)")
-                    } else {
-                        print("videoURL is nil")
-                    }
-                }, label: {
-                    Text("Measure Heart Rate")
-                })
-                .padding(.bottom, 50)
-                .buttonStyle(.borderedProminent)
-                .disabled(isHeartRateButtonDisabled)
-                
-                // measure respiratory rate
-                Text("Respiratory Rate: \(respiratoryRate)")
-                Button(action:{
-                    respiratoryRate = callRespiratoryCalculator(threshold: 0.0589)
-                    print("Computed respiratory rate: \(respiratoryRate)")
-                }, label: {
-                    Text("Measure Respiratory Rate")
-                })
-                .buttonStyle(.borderedProminent)
-                .disabled(isRespiratoryRateButtonDisabled)
-            }
-            .toolbar {
-                ToolbarItem(placement: .automatic) {
-                    NavigationLink(destination: HistoryView()) {
-                        Text("History")
-                    }
-                }
-            }
-        }
-    }
-    
-    func handleVideo(url: URL) {
-        let slowTask = SlowTask()
-        
-        slowTask.processMedia(atPath: url) { rate in
-            heartRate = rate ?? 0
-        }
-    }
-    
-    func handleCSV(url: URL) {
-        // Handle the CSV content
-        do {
-            let dataContents = try String(contentsOf: url)
-            let lines = dataContents.split(separator: "\n").map { String($0) }
-            
-            var currentAxis = -1
-            
-            for line in lines {
-                if let value = Float(line) {
-                    if value == 0.0 {
-                        currentAxis += 1
-                    }
-                    
-                    switch currentAxis {
-                    case 0:
-                        x.append(value)
-                    case 1:
-                        y.append(value)
-                    case 2:
-                        z.append(value)
-                    default:
-                        break
-                    }
-                }
-            }
-        } catch {
-            print("Error reading CSV: \(error)")
-        }
-    }
-    
-    func callRespiratoryCalculator(threshold: Float) -> Int64 {
-        var previousValue: Float = 10.0
-        var currentValue: Float = 0.0
-        var k: Int = 0
-        
-        for i in 11...450 {
-            currentValue = sqrtf(
-                powf(z[i], 2) +
-                powf(x[i], 2) +
-                powf(y[i], 2)
-            )
-            
-            if abs(previousValue - currentValue) > threshold {
-                k += 1
-            }
-            previousValue = currentValue
-        }
-        
-        let ret = Float(k) / 45.0
-        return Int64(ret * 30)
     }
 }
 
