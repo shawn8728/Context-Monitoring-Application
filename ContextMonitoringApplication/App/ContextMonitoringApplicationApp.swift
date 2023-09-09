@@ -2,7 +2,7 @@
 //  ContextMonitoringApplicationApp.swift
 //  ContextMonitoringApplication
 //
-//  Created by Shawn Wang on 9/9/23.
+//  Created by Shawn Wang on 9/6/23.
 //
 
 import SwiftUI
@@ -13,7 +13,7 @@ struct ContextMonitoringApplicationApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }
